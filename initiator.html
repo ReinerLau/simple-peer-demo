@@ -2,7 +2,7 @@
  * @Author: ReinerLau lk850593913@gmail.com
  * @Date: 2022-09-28 16:37:02
  * @LastEditors: ReinerLau lk850593913@gmail.com
- * @LastEditTime: 2022-09-29 10:07:09
+ * @LastEditTime: 2022-09-29 14:50:16
  * @FilePath: \simple-peer-demo\index.html
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
@@ -13,43 +13,34 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>initiator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 </head>
 
 <body>
     <audio controls></audio>
     <script type="module">
-        console.log(location.hash);
-
         import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js";
         const socket = io()
 
         let peer
 
-        navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true
-        }).then(gotMedia)
+        socket.on('signal', answer => {
+            peer.signal(answer)
+        })
 
-        function gotMedia(stream) {
-            createPeer(stream)
-
-            socket.on('test', data => {
-                peer.signal(data)
+        async function createPeer() {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
             })
 
-            socket.on('close', () => {
-                createPeer(stream)
-            })
-        }
+            peer = new SimplePeer({ initiator: true, stream })
 
-        function createPeer(stream) {
-            peer = new SimplePeer({ initiator: location.hash === '#1', stream: stream })
-
-            peer.on('signal', data => {
-                socket.emit('test', data)
+            peer.on('signal', offer => {
+                socket.emit('signal', offer)
             })
+
 
             peer.on('connect', () => {
                 console.log('connect');
@@ -61,6 +52,8 @@
                 audio.play()
             })
         }
+
+        createPeer()
 
     </script>
 </body>
