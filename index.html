@@ -1,0 +1,56 @@
+<!--
+ * @Author: ReinerLau lk850593913@gmail.com
+ * @Date: 2022-09-28 16:37:02
+ * @LastEditors: ReinerLau lk850593913@gmail.com
+ * @LastEditTime: 2022-09-29 09:24:30
+ * @FilePath: \simple-peer-demo\index.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
+</head>
+
+<body>
+    <audio controls></audio>
+    <script type="module">
+        import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js";
+        const socket = io()
+
+
+        navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        }).then(gotMedia).catch(() => { })
+
+        function gotMedia(stream) {
+            const peer = new SimplePeer({ initiator: location.hash === '#1', stream: stream })
+
+            peer.on('signal', data => {
+                socket.emit('test', data)
+            })
+
+            peer.on('connect', () => {
+                console.log('connect');
+            })
+
+            socket.on('test', data => {
+                peer.signal(data)
+            })
+
+            peer.on('stream', stream => {
+                var audio = document.querySelector('audio')
+                audio.srcObject = stream
+                audio.play()
+            })
+        }
+    </script>
+</body>
+
+</html>
